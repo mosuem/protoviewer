@@ -1,12 +1,4 @@
 # protoviewer
 
-Display proto file contents in VSCode.
-
-
-Add the following to your settings:
-```json
-"protoviewer": {
-    "proto-path": "/path/to/your/protobuf_file.proto",
-    "message-name": "MessageName"
-}
-```
+Display proto file contents in VSCode. Just open any file with a `pb` in the 
+extension, choose a proto file, and a message from that file.

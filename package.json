@@ -2,7 +2,7 @@
   "name": "protoviewer",
   "displayName": "protoviewer",
   "description": "Display protofbuf files in VSCode.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -35,7 +35,7 @@
         "displayName": "Protobuf Preview",
         "selector": [
           {
-            "filenamePattern": "*pb"
+            "filenamePattern": "*.*pb"
           }
         ]
       }
