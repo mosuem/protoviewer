@@ -2,15 +2,24 @@
   "name": "protoviewer",
   "displayName": "protoviewer",
   "description": "Display protofbuf files in VSCode.",
-  "version": "1.2.2",
+  "version": "0.0.1",
   "engines": {
-    "vscode": "^1.46.0"
+    "vscode": "^1.75.0"
   },
+  "homepage": "https://github.com/mosuem/protoviewer",
+  "bugs": {
+    "url": "https://github.com/mosuem/protoviewer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mosuem/protoviewer"
+  },
+  "icon": "logo.png",
   "categories": [
     "Visualization"
   ],
   "keywords": [
-    "protofbuf"
+    "protobuf"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -25,7 +34,7 @@
         "displayName": "Protobuf Preview",
         "selector": [
           {
-            "filenamePattern": "*.binpb"
+            "filenamePattern": "*pb"
           }
         ]
       }

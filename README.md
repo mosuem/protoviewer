@@ -10,9 +10,3 @@ Add the following to your settings:
     "message-name": "MessageName"
 }
 ```
-
-## Change log
-See [CHANGELOG.md](CHANGELOG.md).
-
-## License
-Please see [LICENSE](./LICENSE)
