@@ -8,7 +8,10 @@ export class ProtoCustomProvider
   private readonly _previews = new Set<ProtoPreview>();
   private _activePreview: ProtoPreview | undefined;
 
-  constructor(private readonly extensionRoot: vscode.Uri) {}
+  constructor(
+    private readonly extensionRoot: vscode.Uri,
+    private readonly context: vscode.ExtensionContext
+  ) {}
 
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument {
     return { uri, dispose: (): void => {} };
@@ -21,7 +24,8 @@ export class ProtoCustomProvider
     const preview = new ProtoPreview(
       this.extensionRoot,
       document.uri,
-      webviewEditor
+      webviewEditor,
+      this.context
     );
     this._previews.add(preview);
     this.setActivePreview(preview);

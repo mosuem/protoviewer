@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Disposable } from './disposable';
 import { decodeProtobuf } from './protoparser';
+import protobuf = require('protobufjs');
 
 type PreviewState = 'Disposed' | 'Visible' | 'Active';
 
@@ -10,7 +11,8 @@ export class ProtoPreview extends Disposable {
   constructor(
     private readonly extensionRoot: vscode.Uri,
     private readonly resource: vscode.Uri,
-    private readonly webviewEditor: vscode.WebviewPanel
+    private readonly webviewEditor: vscode.WebviewPanel,
+    private readonly context: vscode.ExtensionContext
   ) {
     super();
     const resourceRoot = resource.with({
@@ -67,14 +69,18 @@ export class ProtoPreview extends Disposable {
         }
       })
     );
-
-    this.webviewEditor.webview.html = this.getWebviewContents();
-    this.update();
+    this.getWebviewContents(context).then((html) => {
+      this.webviewEditor.webview.html = html;
+      this.update();
+    });
   }
 
   private reload(): void {
     if (this._previewState !== 'Disposed') {
-      this.webviewEditor.webview.postMessage({ type: 'reload' });
+      this.getWebviewContents(this.context).then((html) => {
+        this.webviewEditor.webview.html = html;
+        this.update();
+      });
     }
   }
 
@@ -90,30 +96,78 @@ export class ProtoPreview extends Disposable {
     this._previewState = 'Visible';
   }
 
-  private getWebviewContents(): string {
+  private async getWebviewContents(
+    context: vscode.ExtensionContext
+  ): Promise<string> {
     const webview = this.webviewEditor.webview;
     const docPath = webview.asWebviewUri(this.resource);
-
-    const config = vscode.workspace.getConfiguration('protoviewer');
-    const protoPath = vscode.Uri.parse(config.get('proto-path'));
-    const messageName = config.get('message-name') as string;
-    console.log(config);
-
+    const protos = JSON.parse(
+      context.globalState.get('protoviewer.protos') ?? '[]'
+    ) as string[];
+    const quickPick = await vscode.window.showQuickPick(
+      [...protos, 'Add new proto'],
+      {
+        canPickMany: false,
+      }
+    );
     const head = `<!DOCTYPE html>
 <html dir="ltr" mozdisallowselectionprint>
 <head>
 <meta charset="utf-8">
 </head>`;
 
-    const body =
-      messageName == null || protoPath == null
-        ? 'Please add your proto-path and message-name args'
-        : `<pre id="json">` +
-          decodeProtobuf(docPath, protoPath, messageName) +
-          `</pre>`;
-
     const tail = ['</html>'].join('\n');
+    let body: string;
+    if (quickPick) {
+      let result: vscode.Uri | undefined;
+      if (quickPick == 'Add new proto') {
+        const filePick = await vscode.window.showOpenDialog({
+          openLabel: 'Add proto',
+          canSelectMany: false,
+          filters: {
+            Protobuffer: ['proto'],
+          },
+        });
+        if (filePick) {
+          result = filePick[0];
 
-    return head + body + tail;
+          protos.push(result.path);
+          context.globalState.update(
+            'protoviewer.protos',
+            JSON.stringify(protos)
+          );
+        }
+      } else {
+        result = vscode.Uri.parse(quickPick);
+      }
+      if (result) {
+        const root = protobuf.loadSync(result.path);
+        console.log(root);
+        const messageNames = root.nestedArray
+          .map((value) => {
+            return (value as protobuf.Namespace).nestedArray;
+          })
+          .reduce((accumulator, value) => accumulator.concat(value), [])
+          .map((value) => {
+            return value.name;
+          });
+        const messageNamePick = await vscode.window.showQuickPick(
+          messageNames,
+          {
+            canPickMany: false,
+          }
+        );
+        if (messageNamePick) {
+          body =
+            messageNamePick == null
+              ? 'Please add your proto-path and message-name args'
+              : `<pre id="json">` +
+                decodeProtobuf(docPath, root, messageNamePick) +
+                `</pre>`;
+          return head + body + tail;
+        }
+      }
+    }
+    return head + 'No proto selected' + tail;
   }
 }

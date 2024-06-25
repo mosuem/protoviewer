@@ -4,7 +4,8 @@ import { ProtoCustomProvider } from './protoProvider';
 export function activate(context: ExtensionContext): void {
   const extensionRoot = Uri.file(context.extensionPath);
   // Register our custom editor provider
-  const provider = new ProtoCustomProvider(extensionRoot);
+  const provider = new ProtoCustomProvider(extensionRoot, context);
+
   context.subscriptions.push(
     window.registerCustomEditorProvider(
       ProtoCustomProvider.viewType,
